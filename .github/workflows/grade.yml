@@ -1,0 +1,345 @@
+name: Grade Kubernetes Challenge
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  grade:
+    name: Grade Kubernetes Manifests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install pyyaml
+
+      - name: Validate YAML syntax
+        id: yaml_check
+        run: |
+          echo "🔍 Checking YAML syntax..."
+          python -c "
+          import yaml
+          import sys
+          from pathlib import Path
+
+          k8s_dir = Path('k8s')
+          errors = []
+
+          for f in k8s_dir.glob('*.yaml'):
+              try:
+                  with open(f) as file:
+                      yaml.safe_load(file)
+                  print(f'✓ {f.name}: Valid YAML')
+              except Exception as e:
+                  errors.append(f'{f.name}: {e}')
+                  print(f'✗ {f.name}: Invalid YAML')
+
+          if errors:
+              sys.exit(1)
+          "
+
+      - name: Grade Deployment (25 points)
+        id: deployment
+        run: |
+          python -c "
+          import yaml
+          import sys
+
+          with open('k8s/deployment.yaml') as f:
+              manifest = yaml.safe_load(f)
+
+          points = 0
+          max_points = 25
+
+          # Check replicas (5 points)
+          replicas = manifest.get('spec', {}).get('replicas', 0)
+          if replicas >= 2:
+              print('✓ Replicas >= 2')
+              points += 5
+          else:
+              print('✗ Replicas < 2')
+
+          # Get container
+          containers = manifest.get('spec', {}).get('template', {}).get('spec', {}).get('containers', [])
+          if containers:
+              container = containers[0]
+
+              # Check image (3 points)
+              if 'k8s-challenge-app' in container.get('image', ''):
+                  print('✓ Correct image')
+                  points += 3
+              else:
+                  print('✗ Wrong image')
+
+              # Check resources (5 points)
+              resources = container.get('resources', {})
+              if resources.get('limits') and resources.get('requests'):
+                  print('✓ Resource limits configured')
+                  points += 5
+              else:
+                  print('✗ Missing resource limits')
+
+              # Check liveness probe (4 points)
+              liveness = container.get('livenessProbe', {})
+              if liveness.get('httpGet', {}).get('path') == '/health':
+                  print('✓ Liveness probe configured')
+                  points += 4
+              else:
+                  print('✗ Missing liveness probe')
+
+              # Check readiness probe (4 points)
+              readiness = container.get('readinessProbe', {})
+              if readiness.get('httpGet', {}).get('path') == '/health':
+                  print('✓ Readiness probe configured')
+                  points += 4
+              else:
+                  print('✗ Missing readiness probe')
+
+              # Check envFrom (2 points)
+              if any(e.get('configMapRef') for e in container.get('envFrom', [])):
+                  print('✓ ConfigMap reference')
+                  points += 2
+              else:
+                  print('✗ Missing ConfigMap reference')
+
+              # Check secretKeyRef (2 points)
+              for env in container.get('env', []):
+                  if env.get('valueFrom', {}).get('secretKeyRef'):
+                      print('✓ Secret reference')
+                      points += 2
+                      break
+              else:
+                  print('✗ Missing Secret reference')
+
+          print(f'\nDeployment Score: {points}/{max_points}')
+          with open('deployment_score.txt', 'w') as f:
+              f.write(str(points))
+          "
+
+      - name: Grade Service (20 points)
+        id: service
+        run: |
+          python -c "
+          import yaml
+
+          with open('k8s/service.yaml') as f:
+              manifest = yaml.safe_load(f)
+
+          points = 0
+          max_points = 20
+
+          # Check type (5 points)
+          if manifest.get('spec', {}).get('type') == 'NodePort':
+              print('✓ Service type is NodePort')
+              points += 5
+          else:
+              print('✗ Service type should be NodePort')
+
+          # Check selector (5 points)
+          if manifest.get('spec', {}).get('selector', {}).get('app') == 'k8s-challenge':
+              print('✓ Selector matches pods')
+              points += 5
+          else:
+              print('✗ Selector does not match pods')
+
+          # Check ports (5 points)
+          ports = manifest.get('spec', {}).get('ports', [])
+          if ports:
+              port = ports[0]
+              if port.get('port') == 80 and port.get('targetPort') == 5000:
+                  print('✓ Port mapping correct (80 → 5000)')
+                  points += 5
+              else:
+                  print('✗ Port mapping incorrect')
+
+              # Check nodePort (5 points)
+              if port.get('nodePort'):
+                  print(f'✓ NodePort set: {port[\"nodePort\"]}')
+                  points += 5
+              else:
+                  print('✗ NodePort not set')
+
+          print(f'\nService Score: {points}/{max_points}')
+          with open('service_score.txt', 'w') as f:
+              f.write(str(points))
+          "
+
+      - name: Grade ConfigMap (15 points)
+        id: configmap
+        run: |
+          python -c "
+          import yaml
+
+          with open('k8s/configmap.yaml') as f:
+              manifest = yaml.safe_load(f)
+
+          points = 0
+          max_points = 15
+
+          # Check name (3 points)
+          if manifest.get('metadata', {}).get('name') == 'k8s-challenge-config':
+              print('✓ Correct name')
+              points += 3
+          else:
+              print('✗ Wrong name')
+
+          # Check data keys (12 points)
+          data = manifest.get('data', {})
+
+          # Remove placeholder
+          if 'PLACEHOLDER' not in data:
+              points += 2
+              print('✓ Placeholder removed')
+          else:
+              print('✗ Placeholder still present')
+
+          required = ['FLASK_ENV', 'LOG_LEVEL', 'APP_NAME']
+          found = [k for k in required if k in data]
+
+          for key in required:
+              if key in data:
+                  print(f'✓ {key} configured')
+                  points += 3
+              else:
+                  print(f'✗ {key} missing')
+
+          print(f'\nConfigMap Score: {points}/{max_points}')
+          with open('configmap_score.txt', 'w') as f:
+              f.write(str(points))
+          "
+
+      - name: Grade Secret (15 points)
+        id: secret
+        run: |
+          python -c "
+          import yaml
+          import base64
+
+          with open('k8s/secret.yaml') as f:
+              manifest = yaml.safe_load(f)
+
+          points = 0
+          max_points = 15
+
+          # Check name (3 points)
+          if manifest.get('metadata', {}).get('name') == 'k8s-challenge-secrets':
+              print('✓ Correct name')
+              points += 3
+          else:
+              print('✗ Wrong name')
+
+          # Check type (2 points)
+          if manifest.get('type') == 'Opaque':
+              print('✓ Type is Opaque')
+              points += 2
+          else:
+              print('✗ Type should be Opaque')
+
+          # Check api-key (10 points)
+          data = manifest.get('data', {})
+          api_key = data.get('api-key', '')
+
+          if api_key and api_key != 'REPLACE-WITH-BASE64-ENCODED-VALUE':
+              try:
+                  decoded = base64.b64decode(api_key).decode('utf-8')
+                  if len(decoded) > 0:
+                      print(f'✓ api-key is valid base64 ({len(decoded)} chars)')
+                      points += 10
+                  else:
+                      print('✗ api-key is empty')
+              except:
+                  print('✗ api-key is not valid base64')
+          else:
+              print('✗ api-key not set')
+
+          print(f'\nSecret Score: {points}/{max_points}')
+          with open('secret_score.txt', 'w') as f:
+              f.write(str(points))
+          "
+
+      - name: Calculate Total Score
+        id: total
+        run: |
+          DEPLOYMENT=$(cat deployment_score.txt)
+          SERVICE=$(cat service_score.txt)
+          CONFIGMAP=$(cat configmap_score.txt)
+          SECRET=$(cat secret_score.txt)
+
+          TOTAL=$((DEPLOYMENT + SERVICE + CONFIGMAP + SECRET))
+          MAX=75
+
+          echo ""
+          echo "═══════════════════════════════════════════"
+          echo "           KUBERNETES CHALLENGE            "
+          echo "═══════════════════════════════════════════"
+          echo ""
+          echo "  📦 Deployment:  $DEPLOYMENT/25 points"
+          echo "  🌐 Service:     $SERVICE/20 points"
+          echo "  ⚙️  ConfigMap:   $CONFIGMAP/15 points"
+          echo "  🔐 Secret:      $SECRET/15 points"
+          echo ""
+          echo "───────────────────────────────────────────"
+          echo "  📊 TOTAL SCORE: $TOTAL/$MAX points"
+          echo "───────────────────────────────────────────"
+          echo ""
+
+          if [ $TOTAL -eq $MAX ]; then
+            echo "  🎉 PERFECT SCORE! You mastered Kubernetes basics!"
+          elif [ $TOTAL -ge 60 ]; then
+            echo "  ✨ Great job! Almost there!"
+          elif [ $TOTAL -ge 40 ]; then
+            echo "  📈 Good progress! Keep going!"
+          else
+            echo "  💪 Keep practicing! Check the README for hints."
+          fi
+          echo ""
+
+          # Fail if not passing
+          if [ $TOTAL -lt 60 ]; then
+            exit 1
+          fi
+
+      - name: Test in Kind Cluster (Bonus)
+        if: success()
+        continue-on-error: true
+        run: |
+          echo "🚀 Testing in real Kubernetes cluster..."
+
+          # Install kind
+          curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.20.0/kind-linux-amd64
+          chmod +x ./kind
+          sudo mv ./kind /usr/local/bin/kind
+
+          # Create cluster
+          kind create cluster --name test-cluster
+
+          # Build and load image
+          docker build -t k8s-challenge-app:latest ./src
+          kind load docker-image k8s-challenge-app:latest --name test-cluster
+
+          # Apply manifests
+          kubectl apply -f k8s/
+
+          # Wait for deployment
+          kubectl wait --for=condition=available deployment/k8s-challenge-app --timeout=60s
+
+          # Test health endpoint
+          kubectl port-forward service/k8s-challenge-service 8080:80 &
+          sleep 5
+          curl -s http://localhost:8080/health | grep -q "healthy" && echo "✓ Health check passed!" || echo "✗ Health check failed"
+
+          # Cleanup
+          kind delete cluster --name test-cluster
+
+          echo "✅ Integration test complete!"

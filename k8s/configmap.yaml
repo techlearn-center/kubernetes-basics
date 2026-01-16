@@ -1,0 +1,26 @@
+# Kubernetes ConfigMap for K8s Challenge App
+# ===========================================
+# TODO: Complete this ConfigMap
+#
+# Requirements:
+# - Name must be: k8s-challenge-config
+# - Include FLASK_ENV, LOG_LEVEL, and APP_NAME
+#
+# Hints:
+# - See README.md Step 4 for detailed guidance
+# - Values are plain text (not base64 encoded)
+# - The deployment references this by name
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8s-challenge-config
+data:
+  # TODO: Add your configuration values
+  # Example:
+  # FLASK_ENV: "production"
+  # LOG_LEVEL: "INFO"
+  # APP_NAME: "My K8s App"
+
+  # Add your values below:
+  PLACEHOLDER: "delete-me"  # Remove this and add real config!

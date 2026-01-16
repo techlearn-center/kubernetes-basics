@@ -1,0 +1,87 @@
+# Kubernetes Deployment for K8s Challenge App
+# ============================================
+# TODO: Complete this deployment manifest
+#
+# Requirements:
+# - Use image: k8s-challenge-app:latest
+# - Run at least 2 replicas
+# - Add resource limits (CPU and memory)
+# - Add liveness probe on /health
+# - Add readiness probe on /health
+# - Load environment variables from ConfigMap and Secret
+#
+# Hints:
+# - See README.md Step 2 for detailed guidance
+# - Labels must match between selector and template
+# - Container port is 5000
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k8s-challenge-app
+  labels:
+    app: k8s-challenge
+spec:
+  # TODO: Set replicas to 2 or more
+  replicas: 1  # Change this!
+
+  selector:
+    matchLabels:
+      app: k8s-challenge
+
+  template:
+    metadata:
+      labels:
+        app: k8s-challenge
+    spec:
+      containers:
+        - name: app
+          image: k8s-challenge-app:latest
+          imagePullPolicy: IfNotPresent
+
+          ports:
+            - containerPort: 5000
+              name: http
+
+          # TODO: Add environment variables from ConfigMap
+          # Hint: Use envFrom with configMapRef
+          # envFrom:
+          #   - configMapRef:
+          #       name: ???
+
+          # TODO: Add environment variable from Secret
+          # Hint: Use env with secretKeyRef
+          # env:
+          #   - name: API_KEY
+          #     valueFrom:
+          #       secretKeyRef:
+          #         name: ???
+          #         key: ???
+
+          # TODO: Add resource requests and limits
+          # Hint: requests are minimum, limits are maximum
+          # resources:
+          #   requests:
+          #     memory: "64Mi"
+          #     cpu: "100m"
+          #   limits:
+          #     memory: "128Mi"
+          #     cpu: "200m"
+
+          # TODO: Add liveness probe
+          # Hint: HTTP GET to /health on port 5000
+          # livenessProbe:
+          #   httpGet:
+          #     path: /health
+          #     port: 5000
+          #   initialDelaySeconds: 10
+          #   periodSeconds: 30
+
+          # TODO: Add readiness probe
+          # Hint: Similar to liveness, but different timing
+          # readinessProbe:
+          #   httpGet:
+          #     path: /health
+          #     port: 5000
+          #   initialDelaySeconds: 5
+          #   periodSeconds: 10

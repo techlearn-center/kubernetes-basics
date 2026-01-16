@@ -1,0 +1,50 @@
+{
+  "id": "kubernetes-basics",
+  "title": "Kubernetes Basics",
+  "description": "Deploy a containerized application to Kubernetes with proper deployments, services, config management, and health checks.",
+  "level": 2,
+  "track": "devops",
+  "difficulty": "intermediate",
+  "estimated_time": "3-4 hours",
+  "prerequisites": [
+    "dockerize-python-app"
+  ],
+  "skills": [
+    "kubernetes",
+    "kubectl",
+    "deployments",
+    "services",
+    "configmaps",
+    "secrets",
+    "health-checks",
+    "resource-management"
+  ],
+  "tools_required": [
+    "docker",
+    "kubectl",
+    "kind"
+  ],
+  "points": {
+    "deployment": 25,
+    "service": 20,
+    "configmap": 15,
+    "secret": 15,
+    "total": 75
+  },
+  "passing_score": 60,
+  "files_to_complete": [
+    "k8s/deployment.yaml",
+    "k8s/service.yaml",
+    "k8s/configmap.yaml",
+    "k8s/secret.yaml"
+  ],
+  "learning_outcomes": [
+    "Understand Kubernetes core concepts (Pods, Deployments, Services)",
+    "Write Kubernetes YAML manifests",
+    "Configure applications using ConfigMaps and Secrets",
+    "Implement health checks (liveness and readiness probes)",
+    "Set resource limits for containers",
+    "Use kubectl for cluster management",
+    "Deploy applications to a local Kubernetes cluster"
+  ]
+}
