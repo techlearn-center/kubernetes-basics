@@ -64,6 +64,23 @@ You have a Docker container. Now you need to run it in **production** - that mea
 
 > ⏱️ **Time:** 15-20 minutes (one-time setup)
 
+### Prerequisites: Docker Required
+
+**Kind runs Kubernetes clusters inside Docker containers.** You must have Docker installed and running before proceeding.
+
+If you haven't installed Docker yet:
+- Complete **Challenge 1.2 (Dockerize Python App)** first - it includes Docker installation instructions
+- Or install Docker Desktop from [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop/)
+
+**Verify Docker is running:**
+```bash
+docker --version
+# Should show: Docker version 24.x or higher
+
+docker ps
+# Should work without errors (may show empty list)
+```
+
 ### What is Kubernetes?
 
 **Kubernetes (K8s)** is a container orchestration platform. It:
