@@ -641,6 +641,30 @@ kubectl get pods -w
 python run.py
 ```
 
+**Expected output when complete:**
+```
+============================================================
+  ☸️  Kubernetes Basics Challenge
+============================================================
+
+  ✅ Deployment (25/25 points)
+  ✅ Service (20/20 points)
+  ✅ ConfigMap (15/15 points)
+  ✅ Secret (15/15 points)
+  ✅ Health Checks (15/15 points)
+  ✅ Resource Limits (10/10 points)
+
+============================================================
+  🎯 Total Score: 100/100
+  🎉 CHALLENGE COMPLETE!
+============================================================
+```
+
+**If you see less than 100:**
+- Read the missing items (marked with ✗)
+- Check the corresponding step in this README
+- Fix your manifest files and run again
+
 ### Submit to GitHub
 
 ```bash
