@@ -30,6 +30,8 @@ class Colors:
 # For Windows compatibility
 if sys.platform == 'win32':
     os.system('color')  # Enable ANSI colors on Windows
+    # Fix Unicode encoding on Windows
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
 
 def print_header():
